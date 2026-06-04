@@ -44,8 +44,8 @@ fn get_raw_memory(meminfo: &String) -> Option<RawMemory> {
     }
 
     Some(RawMemory {
-        total_mb: total,
-        available_mb: available,
+        total_mb: total/1024,
+        available_mb: available/1024,
     })
     
 }
