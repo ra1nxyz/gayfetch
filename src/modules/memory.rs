@@ -70,8 +70,8 @@ fn get_raw_memory(meminfo: &String) -> Option<RawMemory> {
     }
 
     Some(RawMemory {
-        total_mb: total.map(|val| val / 1024.0),
-        available_mb: available.map(|val| val / 1024.0),
+        total_mb: total.map(|val| val / 1048.576),
+        available_mb: available.map(|val| val / 1048.576),
     })
 }
 // im not happy with these two functions doing the same thing but only with different prefix on the
@@ -97,8 +97,8 @@ fn get_raw_swap(meminfo: &String) -> Option<RawMemory> {
     }
 
     Some(RawMemory {
-        total_mb: total.map(|val| val / 1024.0),
-        available_mb: available.map(|val| val / 1024.0),
+        total_mb: total.map(|val| val / 1048.576),
+        available_mb: available.map(|val| val / 1048.576), // data conversion test
     })
 
 }
