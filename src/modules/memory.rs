@@ -16,9 +16,10 @@ struct RawMemory {
 }
 
 pub fn get_host_memory() -> MemInfo {
-    let meminfo = fs::read_to_string("/proc/meminfo").unwrap(); // same issue as processor.rs
-                                                                // for the love of god fix this
-                                                                // already
+    let meminfo = fs::read_to_string("/proc/meminfo").ok(); // get result<s,e> instead
+                                                            // match 
+                                                                
+                                                                
     let mut mem = MemInfo {
         mem_total: None,
         mem_used: None,
@@ -27,25 +28,32 @@ pub fn get_host_memory() -> MemInfo {
         swap_used: None,
         swap_used_percent: None,
     };
-
-    if let Some(r_mem) = get_raw_memory(&meminfo) {
-        mem.mem_total = r_mem.total_mb; 
-        mem.mem_used = r_mem.total_mb
-            .zip(r_mem.available_mb)
-            .map(|(t, a)| t - a); 
-        mem.mem_used_percent = mem.mem_used
-            .zip(mem.mem_total)
-            .map(|(u, t)| (u / t * 100.0) as u32);
-    };
-    if let Some(r_mem_swap) = get_raw_swap(&meminfo) {
-        mem.swap_total = r_mem_swap.total_mb;
-        mem.swap_used = r_mem_swap.total_mb
-            .zip(r_mem_swap.available_mb)
-            .map(|(t, a)| t - a);
-        mem.swap_used_percent = mem.swap_used
-            .zip(mem.swap_total)
-            .map(|(u, t)| (u / t * 100.0) as u32);
-    };
+    
+    
+    match meminfo {
+        Some(inforead) => {
+            if let Some(r_mem) = get_raw_memory(&inforead) {
+                mem.mem_total = r_mem.total_mb; 
+                mem.mem_used = r_mem.total_mb
+                    .zip(r_mem.available_mb)
+                    .map(|(t, a)| t - a); 
+                mem.mem_used_percent = mem.mem_used
+                    .zip(mem.mem_total)
+                    .map(|(u, t)| (u / t * 100.0) as u32);
+            };
+        
+            if let Some(r_mem_swap) = get_raw_swap(&inforead) {
+                mem.swap_total = r_mem_swap.total_mb;
+                mem.swap_used = r_mem_swap.total_mb
+                    .zip(r_mem_swap.available_mb)
+                    .map(|(t, a)| t - a);
+                mem.swap_used_percent = mem.swap_used
+                    .zip(mem.swap_total)
+                    .map(|(u, t)| (u / t * 100.0) as u32);
+            };
+        }
+        None => {} // nothing necessary done, maybe throw debug! later date
+    }
 
     return mem;
 }
