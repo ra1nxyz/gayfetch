@@ -36,7 +36,7 @@ pub fn get_host_memory() -> MemInfo {
                 mem.mem_total = r_mem.total_mb; 
                 mem.mem_used = r_mem.total_mb
                     .zip(r_mem.available_mb)
-                    .map(|(t, a)| t - a); 
+                    .map(|(t, a)| t - a);
                 mem.mem_used_percent = mem.mem_used
                     .zip(mem.mem_total)
                     .map(|(u, t)| (u / t * 100.0) as u32);
@@ -61,30 +61,33 @@ pub fn get_host_memory() -> MemInfo {
 fn get_raw_memory(meminfo: &String) -> Option<RawMemory> {
     let mut total: Option<f64> = None;
     let mut available: Option<f64> = None;
-
+    let mut fallback: f64 = 0.0; // available temp storage where memavailable is n/a
+                                          
     for line in meminfo.lines() {
-        if let Some(totalmem) = line.strip_prefix("MemTotal:") {
-            total = totalmem
-                .split_whitespace()
-                .next()
-                .and_then(|x: &str| x.parse::<f64>().ok());
-        }
-        if let Some(avail) = line.strip_prefix("MemAvailable:") {
-            available = avail
-                .split_whitespace()
-                .next()
-                .and_then(|x: &str| x.parse::<f64>().ok()); 
+        let mut blocks = line.split_whitespace();
+
+        let key = blocks.next();
+        let value = blocks.next().and_then(|v: &str| v.parse::<f64>().ok());
+
+        match key {
+            Some("MemTotal:") => total = value,
+            Some("MemFree:") => { fallback = value.unwrap_or(0.0); }
+            Some("Buffers:") => { fallback += value.unwrap_or(0.0); }
+            Some("Cached:") => { fallback += value.unwrap_or(0.0); }
+            Some("SReclaimable:") => { fallback += value.unwrap_or(0.0); }
+            Some("Shmem:") => { fallback -= value.unwrap_or(0.0); }
+            Some("MemAvailable:") => available = value,
+            _ => {}
         }
     }
+    available = Some(available.unwrap_or_else(|| fallback));
 
     Some(RawMemory {
-        total_mb: total.map(|val| val / 1048.576),
-        available_mb: available.map(|val| val / 1048.576),
+        total_mb: total.map(|val| (val / 1000.0) / 1.049),
+        available_mb: available.map(|val| (val / 1000.0) / 1.049),
     })
 }
-// im not happy with these two functions doing the same thing but only with different prefix on the
-// parsing, i also dont wanna reconfig rawmem function to use some sort of swapfetch flag or smn
-// tho
+// these dont do the same thing anymore so! lmao
 fn get_raw_swap(meminfo: &String) -> Option<RawMemory> {
     let mut total: Option<f64> = None;
     let mut available: Option<f64> = None;
@@ -105,8 +108,8 @@ fn get_raw_swap(meminfo: &String) -> Option<RawMemory> {
     }
 
     Some(RawMemory {
-        total_mb: total.map(|val| val / 1048.576),
-        available_mb: available.map(|val| val / 1048.576), // data conversion test
+        total_mb: total.map(|val| (val / 1000.0) / 1.049),
+        available_mb: available.map(|val| (val / 1000.0) / 1.049), 
     })
 
 }
