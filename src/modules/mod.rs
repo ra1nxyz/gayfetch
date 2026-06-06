@@ -4,6 +4,9 @@ pub mod hostname;
 pub mod user;
 pub mod libc;
 
-// system
+// hardware
 pub mod processor;
 pub mod memory;
+
+// system
+pub mod terminal;
