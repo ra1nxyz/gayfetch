@@ -43,14 +43,18 @@ fn get_proc_shell_by_pid() -> Option<String> {
 }
 
 fn get_user_shell_by_env() -> Option<String> {
-    return std::env::var("SHELL").ok();     // only gets user shell not what is running on the
+    return std::env::var("SHELL")
+        .ok()
+        .filter(|v| !v.is_empty());         // only gets user shell not what is running on the
                                             // terminal where program is ran, and may also be
                                             // incorrect if shell is changed within terminal, pid
                                             // for accuracy, acts as fallback
 }
 
 fn get_session_type_by_env() -> Option<String> {
-    return std::env::var("TERM").ok(); // get terminal capability, shit like xterm-kitty,
+    return std::env::var("TERM")
+        .ok()
+        .filter(|v| !v.is_empty());    // get terminal capability, shit like xterm-kitty,
                                        // xterm-256, linux, etc, standard types not indicative of
                                        // terminal necessarily
 }
