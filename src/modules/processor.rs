@@ -50,7 +50,7 @@ fn get_cpu_threads(cpuinfo: &String) -> usize {
 }
 
 fn get_cpu_frequency(syscpu: &str) -> Option<f64> {
-    let mut max_freq = 0u64;
+    let mut max_freq: Option<u64> = None;
 
     for entry in fs::read_dir(syscpu).unwrap() { // pretty sure this is present in every linux
                                                  // distro but read further for this later
@@ -66,9 +66,14 @@ fn get_cpu_frequency(syscpu: &str) -> Option<f64> {
 
         if let Ok(freq) = fs::read_to_string(path) {
             if let Ok(freq) = freq.trim().parse::<u64>() {
-                max_freq = max_freq.max(freq);
+                max_freq = Some(max_freq.map_or(freq, |m| m.max(freq)));
             }
         }
     }
-    return Some((max_freq / 1000) as f64);
+    return max_freq.map(|f| f as f64 / 1000.0);
 }
+
+// cpufreq tends to be missing in things such as TrueNAS/NixOS vms (only ones ive tested), will add
+// a fallback option later, for now changed handling of max_freq to an Option directly as any sort
+// of operations even when cpufreq doesnt exist returns 0 not None otherwise
+

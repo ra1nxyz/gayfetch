@@ -12,14 +12,12 @@ pub struct MemInfo {
 
 struct RawMemory {
     total_mb: Option<f64>,
-    available_mb: Option<f64>, // add buffers and etc into this later
+    available_mb: Option<f64>, 
 }
 
 pub fn get_host_memory() -> MemInfo {
     let meminfo = fs::read_to_string("/proc/meminfo").ok(); // get result<s,e> instead
-                                                            // match 
-                                                                
-                                                                
+                                                                                          
     let mut mem = MemInfo {
         mem_total: None,
         mem_used: None,
@@ -28,7 +26,6 @@ pub fn get_host_memory() -> MemInfo {
         swap_used: None,
         swap_used_percent: None,
     };
-    
     
     match meminfo {
         Some(inforead) => {
