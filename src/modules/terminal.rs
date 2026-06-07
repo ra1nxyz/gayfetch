@@ -3,29 +3,21 @@ use std::fs;
 #[derive(Debug)]
 pub struct Terminal {
     terminal_name: Option<String>,
-    session_type: Option<String>,
+    terminal_type: Option<String>,
     user_shell: Option<String>,
     proc_shell: Option<String>,
 }
 
 pub fn get_terminal_info() -> Terminal {
 
-    let proc_shell = get_proc_shell_by_pid();
-    let mut proc_shell_return: Option<String> = None;
-
-    match proc_shell {
-        Some(value) =>
-        {
-            proc_shell_return = Some(value);
-        }
-        _ => { proc_shell_return = get_user_shell_by_env(); }
-    }
+    let proc_shell = get_proc_shell_by_pid()
+        .or_else(|| get_user_shell_by_env());
 
    return Terminal {
         terminal_name: Some(String::from("test")), // get terminal later im hungry
-        session_type: get_session_type_by_env(),
+        terminal_type: get_terminal_type_by_env(),
         user_shell: get_user_shell_by_env(),
-        proc_shell: proc_shell_return,
+        proc_shell: proc_shell,
    }
 }
 
@@ -51,7 +43,7 @@ fn get_user_shell_by_env() -> Option<String> {
                                             // for accuracy, acts as fallback
 }
 
-fn get_session_type_by_env() -> Option<String> {
+fn get_terminal_type_by_env() -> Option<String> {
     return std::env::var("TERM")
         .ok()
         .filter(|v| !v.is_empty());    // get terminal capability, shit like xterm-kitty,
